@@ -5,16 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/MRGRAVITY817/goin/utils"
 )
 
 const port string = ":4000"
 
 type URLDescription struct {
-	URL         string
-	Method      string
-	Description string
+	// struct field tag shows the name that we want to show
+	// rather than actual struct field name
+	// because struct field names are forced to be upper case
+	// when it needed to be exported
+	URL         string `json:"url"`
+	Method      string `json:"method"`
+	Description string `json:"description"`
+	// we can selectively show or not with "omit empty"
+	Payload string `json:"payload,omitempty"`
 }
 
 func documentation(rw http.ResponseWriter, r *http.Request) {
@@ -24,10 +28,19 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Method:      "GET",
 			Description: "See Documentation",
 		},
+		{
+			URL:         "/blocks",
+			Method:      "POST",
+			Description: "Add blocks",
+			Payload:     "data:string",
+		},
 	}
-	b, err := json.Marshal(data)
-	utils.HandleErr(err)
-	fmt.Printf("%s", b)
+	rw.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(rw).Encode(data)
+	// These 3 lines are same as above
+	// b, err := json.Marshal(data)
+	// utils.HandleErr(err)
+	// fmt.Fprintf(rw, "%s", b)
 }
 
 func main() {
