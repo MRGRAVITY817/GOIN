@@ -1,11 +1,7 @@
 package main
 
-import (
-	"github.com/MRGRAVITY817/goin/explorer"
-	"github.com/MRGRAVITY817/goin/rest"
-)
+import "github.com/MRGRAVITY817/goin/cli"
 
 func main() {
-	go explorer.Start(3421)
-	rest.Start(4321)
+	cli.Start()
 }
