@@ -1,0 +1,9 @@
+http://localhost:4321/
+###
+http://localhost:4321/blocks
+###
+POST http://localhost:4321/blocks
+
+{
+	"message": "Data for my block"
+}
