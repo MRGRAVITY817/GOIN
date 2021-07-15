@@ -31,6 +31,11 @@ func DB() *bolt.DB {
 	return db
 }
 
+// DB should be closed or it would be corrupted
+func Close() {
+	DB().Close()
+}
+
 // Since bolt allows saving only bytes format, we should get data as bytes
 func SaveBlock(hash string, data []byte) {
 	err := DB().Update(func(t *bolt.Tx) error {
@@ -63,8 +68,8 @@ func Checkpoint() []byte {
 func Block(hash string) []byte {
 	var data []byte
 	DB().View(func(t *bolt.Tx) error {
-		bucket := t.Bucket([]byte(blocksBucket))
-		data = bucket.Get([]byte(hash))
+		b := t.Bucket([]byte(blocksBucket))
+		data = b.Get([]byte(hash))
 		return nil
 	})
 	return data

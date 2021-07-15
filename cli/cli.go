@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/MRGRAVITY817/goin/explorer"
 	"github.com/MRGRAVITY817/goin/rest"
@@ -14,7 +15,7 @@ func usage() {
 	fmt.Printf("Plz use the following flags:\n")
 	fmt.Printf("-port:   Start the PORT of the server\n")
 	fmt.Printf("-mode:   Choose between 'html' and 'rest'\n\n")
-	os.Exit(0)
+	runtime.Goexit() // will terminate this after all the defer options are closed
 }
 
 func Start() {

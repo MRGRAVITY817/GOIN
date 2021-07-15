@@ -1,7 +1,6 @@
 package blockchain
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/MRGRAVITY817/goin/db"
@@ -28,6 +27,22 @@ func (b *blockchain) AddBlock(data string) {
 	b.persist()
 }
 
+func (b *blockchain) Blocks() []*Block {
+	var blocks []*Block
+	hashCursor := b.NewestHash
+	for {
+		block, _ := FindBlock(hashCursor)
+		blocks = append(blocks, block)
+		// this will continue until reached to genesis block
+		if block.PrevHash != "" {
+			hashCursor = block.PrevHash
+		} else {
+			break
+		}
+	}
+	return blocks
+}
+
 func (b *blockchain) persist() {
 	db.SaveBlockchain(utils.ToBytes(b))
 }
@@ -44,9 +59,7 @@ func Blockchain() *blockchain {
 				// restore blockchain from bytesfromBytes
 				b.restore(checkpoint)
 			}
-			// search for checkpoint on the db
 		})
 	}
-	fmt.Println(b.NewestHash)
 	return b
 }
