@@ -8,4 +8,4 @@ POST http://localhost:4321/blocks
 	"message": "Data for my block"
 }
 ###
-http://localhost:4321/blocks/1
+http://localhost:4321/blocks/3

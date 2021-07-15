@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/MRGRAVITY817/goin/blockchain"
 	"github.com/MRGRAVITY817/goin/utils"
@@ -12,6 +13,10 @@ import (
 )
 
 var port string
+
+type errorResponse struct {
+	ErrorMessage string `json:"errorMessage"`
+}
 
 type url string
 
@@ -82,8 +87,15 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 
 func block(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-	fmt.Println(id)
+	id, err := strconv.Atoi(vars["height"])
+	utils.HandleErr(err)
+	block, err := blockchain.GetBlockchain().GetBlock(id)
+	encoder := json.NewEncoder(rw)
+	if err == blockchain.ErrNotFound {
+		encoder.Encode(errorResponse{fmt.Sprint(err)})
+	} else {
+		encoder.Encode(block)
+	}
 }
 
 func Start(aPort int) {
@@ -94,7 +106,7 @@ func Start(aPort int) {
 	port = fmt.Sprintf(":%d", aPort)
 	router.HandleFunc("/", documentation).Methods("GET")
 	router.HandleFunc("/blocks", blocks).Methods("GET", "POST")
-	router.HandleFunc("/blocks/{id:[0-9]+}", block).Methods("GET")
-	fmt.Printf("Listening on http://localhost%s\n", port)
+	router.HandleFunc("/blocks/{height:[0-9]+}", block).Methods("GET")
+	fmt.Printf("Api Server: http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
