@@ -2,11 +2,14 @@ package blockchain
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 
 	"github.com/MRGRAVITY817/goin/db"
 	"github.com/MRGRAVITY817/goin/utils"
 )
+
+var ErrNotFound = errors.New("block not found")
 
 type Block struct {
 	Data     string `json:"data"`
@@ -17,6 +20,10 @@ type Block struct {
 
 func (b *Block) persist() {
 	db.SaveBlock(b.Hash, utils.ToBytes(b))
+}
+
+func (b *Block) restore(data []byte) {
+	utils.FromBytes(b, data)
 }
 
 func createBlock(data string, prevHash string, height int) *Block {
@@ -30,4 +37,14 @@ func createBlock(data string, prevHash string, height int) *Block {
 	block.Hash = fmt.Sprintf("%x", sha256.Sum256([]byte(payload)))
 	block.persist()
 	return &block
+}
+
+func FindBlock(hash string) (*Block, error) {
+	blockBytes := db.Block(hash)
+	if blockBytes == nil {
+		return nil, ErrNotFound
+	}
+	block := &Block{}
+	block.restore(blockBytes)
+	return block, nil
 }

@@ -20,3 +20,10 @@ func ToBytes(i interface{}) []byte {
 	return aBuffer.Bytes()
 
 }
+
+// It restores byte data to golang data
+func FromBytes(i interface{}, data []byte) {
+	// it replace the byte version of b
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	HandleErr(decoder.Decode(i))
+}

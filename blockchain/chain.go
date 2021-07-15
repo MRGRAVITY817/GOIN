@@ -1,8 +1,6 @@
 package blockchain
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"sync"
 
@@ -20,8 +18,7 @@ var once sync.Once
 
 // It restores byte data to golang data
 func (b *blockchain) restore(data []byte) {
-	// it replace the byte version of b
-	utils.HandleErr(gob.NewDecoder(bytes.NewReader(data)).Decode(b))
+	utils.FromBytes(b, data)
 }
 
 func (b *blockchain) AddBlock(data string) {
@@ -39,19 +36,17 @@ func Blockchain() *blockchain {
 	if b == nil {
 		once.Do(func() { // make one instance no matter what
 			b = &blockchain{"", 0} // Create empty Block chain
-			fmt.Printf("Newest hash: %s\nHeight: %d\n", b.NewestHash, b.Height)
 			checkpoint := db.Checkpoint()
 			if checkpoint == nil {
 				// create new genesis block
 				b.AddBlock("Genesis")
 			} else {
 				// restore blockchain from bytesfromBytes
-				fmt.Println("Restoring...")
 				b.restore(checkpoint)
 			}
 			// search for checkpoint on the db
 		})
 	}
-	fmt.Printf("Newest hash: %s\nHeight: %d\n", b.NewestHash, b.Height)
+	fmt.Println(b.NewestHash)
 	return b
 }

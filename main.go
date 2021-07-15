@@ -1,7 +1,9 @@
 package main
 
-import "github.com/MRGRAVITY817/goin/blockchain"
+import (
+	"github.com/MRGRAVITY817/goin/cli"
+)
 
 func main() {
-	blockchain.Blockchain()
+	cli.Start()
 }
