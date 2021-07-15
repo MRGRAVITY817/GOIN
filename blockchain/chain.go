@@ -2,6 +2,9 @@ package blockchain
 
 import (
 	"sync"
+
+	"github.com/MRGRAVITY817/goin/db"
+	"github.com/MRGRAVITY817/goin/utils"
 )
 
 type blockchain struct {
@@ -13,9 +16,14 @@ var b *blockchain
 var once sync.Once
 
 func (b *blockchain) AddBlock(data string) {
-	block := createBlock(data, b.NewestHash, b.Height)
+	block := createBlock(data, b.NewestHash, b.Height+1)
 	b.NewestHash = block.Hash
 	b.Height = block.Height
+	b.persist()
+}
+
+func (b *blockchain) persist() {
+	db.SaveBlockchain(utils.ToBytes(b))
 }
 
 func Blockchain() *blockchain {
