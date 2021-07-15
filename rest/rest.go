@@ -64,7 +64,6 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Description: "See a block",
 		},
 	}
-	rw.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(rw).Encode(data)
 	// These 3 lines are same as above
 	// b, err := json.Marshal(data)
@@ -75,7 +74,6 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 func blocks(rw http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		rw.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(rw).Encode(blockchain.GetBlockchain().AllBlocks())
 	case "POST":
 		var a addBlockBody
@@ -98,12 +96,22 @@ func block(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Middleware is a function before all api endpoint.
+// Which does the dirty stuff prehandedly.
+func jsonContentTypeMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(rw, r)
+	})
+}
+
 func Start(aPort int) {
 	// we need individual mux for each explorer and rest package
 	// or else it will tie them into same router, and it will
 	// eventually cause routing crash.
 	router := mux.NewRouter()
 	port = fmt.Sprintf(":%d", aPort)
+	router.Use(jsonContentTypeMiddleware)
 	router.HandleFunc("/", documentation).Methods("GET")
 	router.HandleFunc("/blocks", blocks).Methods("GET", "POST")
 	router.HandleFunc("/blocks/{height:[0-9]+}", block).Methods("GET")
