@@ -1,12 +1,23 @@
 package main
 
 import (
-	"github.com/MRGRAVITY817/goin/cli"
-	"github.com/MRGRAVITY817/goin/db"
+	"crypto/sha256"
+	"fmt"
+	"strings"
 )
 
 func main() {
-	// defer will activate following function when process has ended
-	defer db.Close()
-	cli.Start()
+	difficulty := 5
+	target := strings.Repeat("0", difficulty)
+	nonce := 1
+	for {
+		ingred := sha256.Sum256([]byte("hello" + fmt.Sprint(nonce)))
+		hash := fmt.Sprintf("%x", ingred)
+		fmt.Printf("Hash: %s\nTarget: %s\nNonce: %d\n\n", hash, target, nonce)
+		if strings.HasPrefix(hash, target) {
+			return
+		} else {
+			nonce++
+		}
+	}
 }
