@@ -1,9 +1,7 @@
 package blockchain
 
 import (
-	"crypto/sha256"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/MRGRAVITY817/goin/db"
@@ -34,9 +32,7 @@ func (b *Block) restore(data []byte) {
 func (b *Block) mine() {
 	target := strings.Repeat("0", b.Difficulty)
 	for {
-		blockAsString := fmt.Sprint(b)
-		hash := fmt.Sprintf("%x", sha256.Sum256([]byte(blockAsString)))
-		fmt.Printf("Block as string: %s\nHash: %s\nNonce: %d\nTarget: %s\n\n", blockAsString, hash, b.Nonce, target)
+		hash := utils.Hash(b)
 		if strings.HasPrefix(hash, target) {
 			b.Hash = hash
 			break
