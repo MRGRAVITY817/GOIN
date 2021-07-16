@@ -62,6 +62,11 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Method:      "GET",
 			Description: "See a block",
 		},
+		{
+			URL:         url("/status"),
+			Method:      "GET",
+			Description: "See the Status of the Blockchain",
+		},
 	}
 	json.NewEncoder(rw).Encode(data)
 	// These 3 lines are same as above
@@ -103,6 +108,10 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func status(rw http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(rw).Encode(blockchain.Blockchain())
+}
+
 func Start(aPort int) {
 	// we need individual mux for each explorer and rest package
 	// or else it will tie them into same router, and it will
@@ -111,6 +120,7 @@ func Start(aPort int) {
 	port = fmt.Sprintf(":%d", aPort)
 	router.Use(jsonContentTypeMiddleware)
 	router.HandleFunc("/", documentation).Methods("GET")
+	router.HandleFunc("/status", status).Methods("GET")
 	router.HandleFunc("/blocks", blocks).Methods("GET", "POST")
 	router.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	fmt.Printf("Api Server: http://localhost%s\n", port)
