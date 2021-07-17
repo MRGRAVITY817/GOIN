@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/MRGRAVITY817/goin/blockchain"
-	"github.com/MRGRAVITY817/goin/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -80,9 +79,9 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 	case "GET":
 		json.NewEncoder(rw).Encode(blockchain.Blockchain().Blocks())
 	case "POST":
-		var a addBlockBody
-		utils.HandleErr(json.NewDecoder(r.Body).Decode(&a))
-		blockchain.Blockchain().AddBlock(a.Message)
+		// var a addBlockBody
+		// utils.HandleErr(json.NewDecoder(r.Body).Decode(&a))
+		blockchain.Blockchain().AddBlock()
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
