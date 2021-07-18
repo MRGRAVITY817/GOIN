@@ -8,6 +8,7 @@ import (
 
 	"github.com/MRGRAVITY817/goin/blockchain"
 	"github.com/MRGRAVITY817/goin/utils"
+	"github.com/MRGRAVITY817/goin/wallet"
 	"github.com/gorilla/mux"
 )
 
@@ -25,6 +26,10 @@ type balanceResponse struct {
 type addTxPayload struct {
 	To     string `json:"to"`
 	Amount int    `json:"amount"`
+}
+
+type myWalletResponse struct {
+	Address string `json:"address"`
 }
 
 type url string
@@ -48,10 +53,6 @@ type urlDescription struct {
 
 func (u urlDescription) String() string {
 	return "Hello I'm the url Description"
-}
-
-type addBlockBody struct {
-	Message string
 }
 
 func documentation(rw http.ResponseWriter, r *http.Request) {
@@ -82,12 +83,24 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Method:      "GET",
 			Description: "Get TxOuts for an Address",
 		},
+		{
+			URL:         url("/mempool"),
+			Method:      "GET",
+			Description: "Get unconfirmed txs",
+		},
+		{
+			URL:         url("/wallet"),
+			Method:      "GET",
+			Description: "Get wallet info",
+		},
+		{
+			URL:         url("/transactions"),
+			Method:      "POST",
+			Description: "Send transactions",
+			Payload:     "data:tx",
+		},
 	}
 	json.NewEncoder(rw).Encode(data)
-	// These 3 lines are same as above
-	// b, err := json.Marshal(data)
-	// utils.HandleErr(err)
-	// fmt.Fprintf(rw, "%s", b)
 }
 
 func blocks(rw http.ResponseWriter, r *http.Request) {
@@ -154,6 +167,11 @@ func transactions(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusCreated)
 }
 
+func myWallet(rw http.ResponseWriter, r *http.Request) {
+	address := wallet.Wallet().Address
+	json.NewEncoder(rw).Encode(myWalletResponse{Address: address})
+}
+
 func Start(aPort int) {
 	// we need individual mux for each explorer and rest package
 	// or else it will tie them into same router, and it will
@@ -167,6 +185,7 @@ func Start(aPort int) {
 	router.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	router.HandleFunc("/balance/{address}", balance).Methods("GET")
 	router.HandleFunc("/mempool", mempool).Methods("GET")
+	router.HandleFunc("/wallet", myWallet).Methods("GET")
 	router.HandleFunc("/transactions", transactions).Methods("POST")
 	fmt.Printf("Api Server: http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
