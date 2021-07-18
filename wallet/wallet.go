@@ -50,21 +50,12 @@ func restoreKey() (key *ecdsa.PrivateKey) {
 	return
 }
 
-func addressFromKey(key *ecdsa.PrivateKey) string {
-	z := append(key.X.Bytes(), key.Y.Bytes()...)
+func encodeBigInts(a, b []byte) string {
+	z := append(a, b...)
 	return fmt.Sprintf("%x", z)
 }
 
-func sign(payload string, w *wallet) string {
-	payloadAsBytes, err := hex.DecodeString(payload)
-	utils.HandleErr(err)
-	r, s, err := ecdsa.Sign(rand.Reader, w.privateKey, payloadAsBytes)
-	utils.HandleErr(err)
-	signature := append(r.Bytes(), s.Bytes()...)
-	return fmt.Sprintf("%x", signature)
-}
-
-func restoreBigInts(signature string) (*big.Int, *big.Int, error) {
+func decodeBigInts(signature string) (*big.Int, *big.Int, error) {
 	bytes, err := hex.DecodeString(signature)
 	if err != nil {
 		return nil, nil, err
@@ -77,10 +68,22 @@ func restoreBigInts(signature string) (*big.Int, *big.Int, error) {
 	return &bigA, &bigB, nil
 }
 
-func verify(signature, payload, address string) bool {
-	r, s, err := restoreBigInts(signature)
+func addressFromKey(key *ecdsa.PrivateKey) string {
+	return encodeBigInts(key.X.Bytes(), key.Y.Bytes())
+}
+
+func sign(payload string, w *wallet) string {
+	payloadAsBytes, err := hex.DecodeString(payload)
 	utils.HandleErr(err)
-	x, y, err := restoreBigInts(address)
+	r, s, err := ecdsa.Sign(rand.Reader, w.privateKey, payloadAsBytes)
+	utils.HandleErr(err)
+	return encodeBigInts(r.Bytes(), s.Bytes())
+}
+
+func verify(signature, payload, address string) bool {
+	r, s, err := decodeBigInts(signature)
+	utils.HandleErr(err)
+	x, y, err := decodeBigInts(address)
 	utils.HandleErr(err)
 	publicKey := ecdsa.PublicKey{
 		Curve: elliptic.P256(),
