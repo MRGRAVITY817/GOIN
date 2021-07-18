@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/MRGRAVITY817/goin/utils"
+	"github.com/MRGRAVITY817/goin/wallet"
 )
 
 const (
@@ -112,7 +113,7 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 
 // Add transaction to mempool
 func (m *mempool) AddTx(to string, amount int) error {
-	tx, err := makeTx("hoon", to, amount)
+	tx, err := makeTx(wallet.Wallet().Address, to, amount)
 	if err != nil {
 		return err
 	}
@@ -122,7 +123,7 @@ func (m *mempool) AddTx(to string, amount int) error {
 
 // when the block in mined, mempool txs will be confirmed and saved
 func (m *mempool) TxToConfirm() []*Tx {
-	coinbase := makeCoinbaseTx("hoon")
+	coinbase := makeCoinbaseTx(wallet.Wallet().Address)
 	txs := m.Txs
 	txs = append(txs, coinbase)
 	m.Txs = nil
