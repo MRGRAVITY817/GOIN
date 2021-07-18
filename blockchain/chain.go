@@ -52,6 +52,25 @@ func recalculateDifficulty(b *blockchain) int {
 	return b.CurrentDifficulty
 }
 
+// Get all transactions in blockchain
+func Txs(b *blockchain) []*Tx {
+	var txs []*Tx
+	for _, block := range Blocks(b) {
+		txs = append(txs, block.Transactions...)
+	}
+	return txs
+}
+
+// Find the specific transaction from blockchain using id
+func FindTx(b *blockchain, targetId string) *Tx {
+	for _, tx := range Txs(b) {
+		if tx.Id == targetId {
+			return tx
+		}
+	}
+	return nil
+}
+
 func getDifficulty(b *blockchain) int {
 	if b.Height == 0 {
 		return defaultDifficulty
@@ -89,13 +108,16 @@ func UTxOutsByAddress(address string, b *blockchain) []*UTxOut {
 			// Saving the txId that created the output
 			// that user is using as an input.
 			for _, input := range tx.TxIns {
-				if input.Owner == address {
+				if input.Signature == "COINBASE" {
+					break
+				}
+				if FindTx(b, input.TxId).TxOuts[input.Index].Address == address {
 					creatorTxs[input.TxId] = true
 				}
 			}
 			// We won't use the already-spent txs as input
 			for index, output := range tx.TxOuts {
-				if output.Owner == address {
+				if output.Address == address {
 					if _, ok := creatorTxs[tx.Id]; !ok {
 						uTxOut := &UTxOut{tx.Id, index, output.Amount}
 						if !isOnMempool(uTxOut) {

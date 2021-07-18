@@ -27,14 +27,14 @@ type Tx struct {
 }
 
 type TxIn struct {
-	TxId  string `json:"txId"`
-	Index int    `json:"index"`
-	Owner string `json:"owner"`
+	TxId      string `json:"txId"`
+	Index     int    `json:"index"`
+	Signature string `json:"signature"`
 }
 
 type TxOut struct {
-	Owner  string `json:"owner"`
-	Amount int    `json:"amount"`
+	Address string `json:"address"`
+	Amount  int    `json:"amount"`
 }
 
 type UTxOut struct {
@@ -43,8 +43,37 @@ type UTxOut struct {
 	Amount int
 }
 
+// Hash the tx struct
 func (t *Tx) getId() {
 	t.Id = utils.Hash(t)
+}
+
+// make signature using payload(txId) and private key
+func (t *Tx) sign() {
+	for _, txIn := range t.TxIns {
+		txIn.Signature = wallet.Sign(t.Id, wallet.Wallet())
+	}
+}
+
+// Validate a transaction
+func validate(tx *Tx) bool {
+	valid := true
+	for _, txIn := range tx.TxIns {
+		// check if tx inputs are referencing existing tx
+		prevTx := FindTx(Blockchain(), txIn.TxId)
+		// if not, it's invalid transaction
+		if prevTx == nil {
+			valid = false
+			break
+		}
+		// get referred tx's output address(public key) and verify it
+		address := prevTx.TxOuts[txIn.Index].Address
+		valid = wallet.Verify(txIn.Signature, tx.Id, address)
+		if !valid {
+			break
+		}
+	}
+	return valid
 }
 
 func makeCoinbaseTx(address string) *Tx {
@@ -78,9 +107,12 @@ Outer: // labels will designate certain loops
 	return exists
 }
 
+var ErrorNoMoney = errors.New("not enough money")
+var ErrorNotValid = errors.New("transaction invalid")
+
 func makeTx(from, to string, amount int) (*Tx, error) {
 	if BalanceByAddress(from, Blockchain()) < amount {
-		return nil, errors.New("not enough money")
+		return nil, ErrorNoMoney
 	}
 	var txOuts []*TxOut
 	var txIns []*TxIn
@@ -108,6 +140,12 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 		TxOuts:    txOuts,
 	}
 	tx.getId()
+	tx.sign()
+	// validate
+	valid := validate(tx)
+	if !valid {
+		return nil, ErrorNotValid
+	}
 	return tx, nil
 }
 
