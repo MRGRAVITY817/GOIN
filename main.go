@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/MRGRAVITY817/goin/cli"
-	"github.com/MRGRAVITY817/goin/db"
+	"github.com/MRGRAVITY817/goin/wallet"
 )
 
 func main() {
-	defer db.Close()
-	cli.Start()
+	// defer db.Close()
+	// cli.Start()
+	wallet.Start()
 }
