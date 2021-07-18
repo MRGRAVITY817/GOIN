@@ -29,7 +29,7 @@ func (b *blockchain) restore(data []byte) {
 }
 
 func (b *blockchain) AddBlock() {
-	block := createBlock(b.NewestHash, b.Height+1)
+	block := createBlock(b.NewestHash, b.Height+1, getDifficulty(b))
 	b.NewestHash = block.Hash
 	b.Height = block.Height
 	b.CurrentDifficulty = block.Difficulty
@@ -52,7 +52,7 @@ func recalculateDifficulty(b *blockchain) int {
 	return b.CurrentDifficulty
 }
 
-func difficulty(b *blockchain) int {
+func getDifficulty(b *blockchain) int {
 	if b.Height == 0 {
 		return defaultDifficulty
 	} else if b.Height%difficultyInterval == 0 {
@@ -119,7 +119,10 @@ func BalanceByAddress(address string, b *blockchain) int {
 }
 
 func Blockchain() *blockchain {
-	once.Do(func() { // make one instance no matter what
+	// make one instance no matter what.
+	// but if the function inside the once.Do() calls the once.Do(),
+	// it will make the deadlock (infinite loop)
+	once.Do(func() {
 		b = &blockchain{Height: 0} // Create empty Block chain
 		checkpoint := db.Checkpoint()
 		if checkpoint == nil {
