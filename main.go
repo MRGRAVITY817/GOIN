@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"time"
+
+	"github.com/MRGRAVITY817/goin/cli"
+	"github.com/MRGRAVITY817/goin/db"
 )
 
 // chan<- means it's send-only channel
@@ -29,14 +32,6 @@ func receive(c <-chan int) {
 }
 
 func main() {
-	// when you make buffered channel, you can rapidly store sending data
-	// buffer and then send.
-	// The code below will stack first 5 integers in buffer and then send
-	// to the channel.
-	c := make(chan int, 5)
-	go countToTen(c)
-	receive(c)
+	defer db.Close()
+	cli.Start()
 }
-
-// defer db.Close()
-// cli.Start()

@@ -20,7 +20,6 @@ func ToBytes(i interface{}) []byte {
 	encoder := gob.NewEncoder(&aBuffer)
 	HandleErr(encoder.Encode(i))
 	return aBuffer.Bytes()
-
 }
 
 // It restores byte data to golang data

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/MRGRAVITY817/goin/blockchain"
+	"github.com/MRGRAVITY817/goin/p2p"
 	"github.com/MRGRAVITY817/goin/utils"
 	"github.com/MRGRAVITY817/goin/wallet"
 	"github.com/gorilla/mux"
@@ -99,6 +100,11 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Description: "Send transactions",
 			Payload:     "data:tx",
 		},
+		{
+			URL:         url("/ws"),
+			Method:      "GET",
+			Description: "Upgrade to websockets",
+		},
 	}
 	json.NewEncoder(rw).Encode(data)
 }
@@ -132,6 +138,13 @@ func block(rw http.ResponseWriter, r *http.Request) {
 func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(rw, r)
+	})
+}
+
+func loggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.RequestURI)
 		next.ServeHTTP(rw, r)
 	})
 }
@@ -180,7 +193,7 @@ func Start(aPort int) {
 	// eventually cause routing crash.
 	router := mux.NewRouter()
 	port = fmt.Sprintf(":%d", aPort)
-	router.Use(jsonContentTypeMiddleware)
+	router.Use(jsonContentTypeMiddleware, loggerMiddleware)
 	router.HandleFunc("/", documentation).Methods("GET")
 	router.HandleFunc("/status", status).Methods("GET")
 	router.HandleFunc("/blocks", blocks).Methods("GET", "POST")
@@ -189,6 +202,7 @@ func Start(aPort int) {
 	router.HandleFunc("/mempool", mempool).Methods("GET")
 	router.HandleFunc("/wallet", myWallet).Methods("GET")
 	router.HandleFunc("/transactions", transactions).Methods("POST")
+	router.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
 	fmt.Printf("Api Server: http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
