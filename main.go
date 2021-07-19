@@ -8,7 +8,6 @@ import (
 // chan<- means it's send-only channel
 func countToTen(c chan<- int) {
 	for i := range [10]int{} {
-		time.Sleep(1 * time.Second)
 		fmt.Printf("Sending %d\n", i)
 		c <- i
 	}
@@ -19,6 +18,7 @@ func countToTen(c chan<- int) {
 // without arrow, you can send to channel
 func receive(c <-chan int) {
 	for {
+		time.Sleep(1 * time.Second)
 		a, ok := <-c
 		if !ok {
 			fmt.Println("Done!")
@@ -29,7 +29,11 @@ func receive(c <-chan int) {
 }
 
 func main() {
-	c := make(chan int)
+	// when you make buffered channel, you can rapidly store sending data
+	// buffer and then send.
+	// The code below will stack first 5 integers in buffer and then send
+	// to the channel.
+	c := make(chan int, 5)
 	go countToTen(c)
 	receive(c)
 }
