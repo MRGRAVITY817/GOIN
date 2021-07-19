@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-func countToTen(c chan int) {
+// chan<- means it's send-only channel
+func countToTen(c chan<- int) {
 	for i := range [10]int{} {
 		time.Sleep(1 * time.Second)
 		fmt.Printf("Sending %d\n", i)
@@ -14,7 +15,9 @@ func countToTen(c chan int) {
 	close(c) // close channel after used
 }
 
-func receive(c chan int) {
+// <-chan means it's receive-only channel
+// without arrow, you can send to channel
+func receive(c <-chan int) {
 	for {
 		a, ok := <-c
 		if !ok {
