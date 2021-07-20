@@ -29,6 +29,10 @@ type addTxPayload struct {
 	Amount int    `json:"amount"`
 }
 
+type addPeerPayload struct {
+	address, port string
+}
+
 type myWalletResponse struct {
 	Address string `json:"address"`
 }
@@ -98,12 +102,18 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			URL:         url("/transactions"),
 			Method:      "POST",
 			Description: "Send transactions",
-			Payload:     "data:tx",
+			Payload:     "data:addTxPayload",
 		},
 		{
 			URL:         url("/ws"),
 			Method:      "GET",
 			Description: "Upgrade to websockets",
+		},
+		{
+			URL:         url("/peers"),
+			Method:      "POST",
+			Description: "Add peer network",
+			Payload:     "data:addPeerPayload",
 		},
 	}
 	json.NewEncoder(rw).Encode(data)
@@ -187,6 +197,17 @@ func myWallet(rw http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(rw).Encode(myWalletResponse{Address: address})
 }
 
+func peers(rw http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		var paylaod addPeerPayload
+		json.NewDecoder(r.Body).Decode(&paylaod)
+		p2p.AddPeer(paylaod.address, paylaod.port)
+		rw.WriteHeader(http.StatusOK)
+	}
+
+}
+
 func Start(aPort int) {
 	// we need individual mux for each explorer and rest package
 	// or else it will tie them into same router, and it will
@@ -203,6 +224,7 @@ func Start(aPort int) {
 	router.HandleFunc("/wallet", myWallet).Methods("GET")
 	router.HandleFunc("/transactions", transactions).Methods("POST")
 	router.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
+	router.HandleFunc("/peers", peers).Methods("POST")
 	fmt.Printf("Api Server: http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
