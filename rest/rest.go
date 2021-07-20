@@ -30,7 +30,7 @@ type addTxPayload struct {
 }
 
 type addPeerPayload struct {
-	address, port string
+	Address, Port string
 }
 
 type myWalletResponse struct {
@@ -200,10 +200,12 @@ func myWallet(rw http.ResponseWriter, r *http.Request) {
 func peers(rw http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
-		var paylaod addPeerPayload
-		json.NewDecoder(r.Body).Decode(&paylaod)
-		p2p.AddPeer(paylaod.address, paylaod.port)
+		var payload addPeerPayload
+		json.NewDecoder(r.Body).Decode(&payload)
+		p2p.AddPeer(payload.Address, payload.Port)
 		rw.WriteHeader(http.StatusOK)
+	case "GET":
+		json.NewEncoder(rw).Encode(p2p.Peers)
 	}
 
 }
@@ -224,7 +226,7 @@ func Start(aPort int) {
 	router.HandleFunc("/wallet", myWallet).Methods("GET")
 	router.HandleFunc("/transactions", transactions).Methods("POST")
 	router.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
-	router.HandleFunc("/peers", peers).Methods("POST")
+	router.HandleFunc("/peers", peers).Methods("GET", "POST")
 	fmt.Printf("Api Server: http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
