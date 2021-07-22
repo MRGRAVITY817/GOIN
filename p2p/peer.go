@@ -35,11 +35,12 @@ func (p *peer) read() {
 	// defer will be executed after the function is over.
 	defer p.close()
 	for {
-		_, m, err := p.conn.ReadMessage()
+		m := Message{}
+		err := p.conn.ReadJSON(&m)
 		if err != nil {
 			break
 		}
-		fmt.Printf("%s\n", m)
+		fmt.Println(m.Kind)
 	}
 }
 
