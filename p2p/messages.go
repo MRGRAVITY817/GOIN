@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/MRGRAVITY817/goin/blockchain"
 	"github.com/MRGRAVITY817/goin/utils"
@@ -33,4 +34,14 @@ func sendNewestBlock(p *peer) {
 	utils.HandleErr(err)
 	m := makeMessage(MessageNewestBlock, b)
 	p.inbox <- m
+}
+
+func handleMsg(m *Message, p *peer) {
+	switch m.Kind {
+	case MessageNewestBlock:
+		var payload blockchain.Block
+		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
+		fmt.Println(payload)
+	}
+	fmt.Printf("Peer: %s, Sent a message with kind of: %d", p.key, m.Kind)
 }
