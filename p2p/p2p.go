@@ -21,6 +21,7 @@ func Upgrade(rw http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(rw, r, nil)
 	utils.HandleErr(err)
 	initPeer(conn, ip, openPort)
+	conn.WriteMessage(websocket.TextMessage, []byte("Hello from Port 3000!"))
 }
 
 // This will dial(connect) another process to send a message
@@ -29,4 +30,5 @@ func AddPeer(address, port, openPort string) {
 	conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s:%s/ws?openPort=%s", address, port, openPort[1:]), nil)
 	utils.HandleErr(err)
 	initPeer(conn, address, port)
+	conn.WriteMessage(websocket.TextMessage, []byte("Hello from Port 4000!"))
 }
