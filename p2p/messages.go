@@ -20,20 +20,12 @@ type Message struct {
 	Payload []byte
 }
 
-func (m *Message) addPayload(p interface{}) {
-	b, err := json.Marshal(p)
-	utils.HandleErr(err)
-	m.Payload = b
-}
-
 func makeMessage(kind MessageKind, payload interface{}) []byte {
 	m := Message{
-		Kind: kind,
+		Kind:    kind,
+		Payload: utils.ToJson(payload),
 	}
-	m.addPayload(payload)
-	mJson, err := json.Marshal(m)
-	utils.HandleErr(err)
-	return mJson
+	return utils.ToJson(m)
 }
 
 func sendNewestBlock(p *peer) {
