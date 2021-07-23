@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/MRGRAVITY817/goin/utils"
@@ -14,10 +15,19 @@ const (
 
 type mempool struct {
 	Txs []*Tx
+	m   sync.Mutex
 }
 
 // Memory only -> not stored in db
-var Mempool *mempool = &mempool{}
+var m *mempool = &mempool{}
+var memOnce sync.Once
+
+func Mempool() *mempool {
+	memOnce.Do(func() {
+		m = &mempool{}
+	})
+	return m
+}
 
 type Tx struct {
 	Id        string   `json:"id"`
@@ -96,7 +106,7 @@ func makeCoinbaseTx(address string) *Tx {
 func isOnMempool(uTxOut *UTxOut) bool {
 	exists := false
 Outer: // labels will designate certain loops
-	for _, tx := range Mempool.Txs {
+	for _, tx := range Mempool().Txs {
 		for _, input := range tx.TxIns {
 			if input.TxId == uTxOut.TxID && input.Index == uTxOut.Index {
 				exists = true
@@ -150,13 +160,13 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 }
 
 // Add transaction to mempool
-func (m *mempool) AddTx(to string, amount int) error {
+func (m *mempool) AddTx(to string, amount int) (*Tx, error) {
 	tx, err := makeTx(wallet.Wallet().Address, to, amount)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	m.Txs = append(m.Txs, tx)
-	return nil
+	return tx, nil
 }
 
 // when the block in mined, mempool txs will be confirmed and saved
@@ -166,4 +176,11 @@ func (m *mempool) TxToConfirm() []*Tx {
 	txs = append(txs, coinbase)
 	m.Txs = nil
 	return txs
+}
+
+// Adding peer tx will have data race, so it should be locked.
+func (m *mempool) AddPeerTx(tx *Tx) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.Txs = append(m.Txs, tx)
 }
