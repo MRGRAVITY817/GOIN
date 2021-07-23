@@ -42,6 +42,23 @@ func (b *blockchain) AddBlock() *Block {
 	return block
 }
 
+// When we get broadcasted message about new mined block,
+// we will add peer block.
+func (b *blockchain) AddPeerBlock(block *Block) {
+	b.m.Lock()
+	defer b.m.Unlock()
+
+	b.Height += 1
+	b.CurrentDifficulty = block.Difficulty
+	b.NewestHash = block.Hash
+
+	persistBlockchain(b)
+	persistBlock(block)
+
+	//mempool
+
+}
+
 // Check if the block mining interval is in the range
 // of the time length that we expected to be in.
 func recalculateDifficulty(b *blockchain) int {
