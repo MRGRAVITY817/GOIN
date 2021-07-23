@@ -124,9 +124,8 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 	case "GET":
 		json.NewEncoder(rw).Encode(blockchain.Blocks(blockchain.Blockchain()))
 	case "POST":
-		// var a addBlockBody
-		// utils.HandleErr(json.NewDecoder(r.Body).Decode(&a))
-		blockchain.Blockchain().AddBlock()
+		newBlock := blockchain.Blockchain().AddBlock()
+		p2p.BroadcastNewBlock(newBlock)
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
@@ -199,13 +198,13 @@ func myWallet(rw http.ResponseWriter, r *http.Request) {
 
 func peers(rw http.ResponseWriter, r *http.Request) {
 	switch r.Method {
+	case "GET":
+		json.NewEncoder(rw).Encode(p2p.AllPeers(&p2p.Peers))
 	case "POST":
 		var payload addPeerPayload
 		json.NewDecoder(r.Body).Decode(&payload)
 		p2p.AddPeer(payload.Address, payload.Port, port)
 		rw.WriteHeader(http.StatusOK)
-	case "GET":
-		json.NewEncoder(rw).Encode(p2p.AllPeers(&p2p.Peers))
 	}
 
 }

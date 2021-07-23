@@ -14,6 +14,7 @@ const (
 	MessageNewestBlock MessageKind = iota
 	MessageAllBlocksRequest
 	MessageAllBlocksResponse
+	MessageNewBlockNotify
 )
 
 type Message struct {
@@ -21,6 +22,8 @@ type Message struct {
 	Payload []byte
 }
 
+// To pass blockchain, block kind of data through channel,
+// it should be converted into Json encoded bytes.
 func makeMessage(kind MessageKind, payload interface{}) []byte {
 	m := Message{
 		Kind:    kind,
@@ -77,4 +80,10 @@ func handleMsg(m *Message, p *peer) {
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
 		blockchain.Blockchain().Replace(payload)
 	}
+}
+
+// This will send a new block to peer
+func notifyNewBlock(b *blockchain.Block, p *peer) {
+	m := makeMessage(MessageNewBlockNotify, b)
+	p.inbox <- m
 }

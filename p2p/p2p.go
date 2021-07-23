@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/MRGRAVITY817/goin/blockchain"
 	"github.com/MRGRAVITY817/goin/utils"
 	"github.com/gorilla/websocket"
 )
@@ -32,4 +33,11 @@ func AddPeer(address, port, openPort string) {
 	utils.HandleErr(err)
 	p := initPeer(conn, address, port)
 	sendNewestBlock(p)
+}
+
+// Visit every peers and send a newest block
+func BroadcastNewBlock(b *blockchain.Block) {
+	for _, p := range Peers.v {
+		notifyNewBlock(b, p)
+	}
 }
