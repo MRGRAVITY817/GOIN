@@ -1,6 +1,8 @@
 package blockchain
 
 import (
+	"encoding/json"
+	"net/http"
 	"sync"
 
 	"github.com/MRGRAVITY817/goin/db"
@@ -11,6 +13,7 @@ type blockchain struct {
 	NewestHash        string `json:"newestHash"`
 	Height            int    `json:"height"`
 	CurrentDifficulty int    `json:"currentDifficulty"`
+	m                 sync.Mutex
 }
 
 const (
@@ -81,6 +84,8 @@ func getDifficulty(b *blockchain) int {
 }
 
 func Blocks(b *blockchain) []*Block {
+	b.m.Lock()
+	defer b.m.Unlock()
 	var blocks []*Block
 	hashCursor := b.NewestHash
 	for {
@@ -98,6 +103,14 @@ func Blocks(b *blockchain) []*Block {
 
 func persistBlockchain(b *blockchain) {
 	db.SaveCheckpoint(utils.ToBytes(b))
+}
+
+// Reading status of blockchain
+// should be locked with mutex
+func Status(b *blockchain, rw http.ResponseWriter) {
+	b.m.Lock()
+	defer b.m.Unlock()
+	utils.HandleErr(json.NewEncoder(rw).Encode(b))
 }
 
 func UTxOutsByAddress(address string, b *blockchain) []*UTxOut {
@@ -159,6 +172,8 @@ func Blockchain() *blockchain {
 }
 
 func (b *blockchain) Replace(newBlocks []*Block) {
+	b.m.Lock()
+	defer b.m.Unlock()
 	// update blockchain
 	b.CurrentDifficulty = newBlocks[0].Difficulty
 	b.Height = len(newBlocks)
